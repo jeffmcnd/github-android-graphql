@@ -15,9 +15,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.justjeff.graphqlexample.ui.theme.GraphQLExampleTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val viewModel by viewModels<MainViewModel> { MainViewModel.Factory }
+    private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,21 +27,21 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             GraphQLExampleTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        viewModel = viewModel,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                GreetingPage(viewModel = viewModel)
             }
         }
     }
 }
 
 @Composable
-fun Greeting(viewModel: MainViewModel, modifier: Modifier = Modifier) {
+fun GreetingPage(viewModel: MainViewModel) {
     val state by viewModel.state.collectAsState()
-    Greeting(state.text, modifier)
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        Greeting(
+            text = state.text,
+            modifier = Modifier.padding(innerPadding)
+        )
+    }
 }
 
 @Composable

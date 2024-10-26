@@ -1,20 +1,20 @@
 package com.justjeff.graphqlexample
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo.ApolloClient
-import com.apollographql.apollo.network.okHttpClient
 import com.justjeff.graphqlexample.models.RepositoryQuery
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
 
-class MainViewModel(private val client: ApolloClient) : ViewModel() {
+@HiltViewModel
+class MainViewModel @Inject constructor(private val client: ApolloClient) : ViewModel() {
     private val _state = MutableStateFlow(MainUiState("Loading..."))
     val state: StateFlow<MainUiState>
         get() = _state.asStateFlow()
@@ -41,23 +41,6 @@ class MainViewModel(private val client: ApolloClient) : ViewModel() {
                 else -> "Unexpected error. Try again."
             }
             _state.update { it.copy(text = text) }
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val client = ApolloClient.Builder()
-                    .serverUrl("https://api.github.com/graphql")
-                    .okHttpClient(
-                        OkHttpClient.Builder()
-                            .addInterceptor(AuthorizationInterceptor())
-                            .build()
-                    )
-                    .build()
-                return MainViewModel(client) as T
-            }
         }
     }
 }
