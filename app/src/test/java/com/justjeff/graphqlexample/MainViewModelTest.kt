@@ -1,5 +1,6 @@
 package com.justjeff.graphqlexample
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.annotations.ApolloExperimental
@@ -18,49 +19,63 @@ class MainViewModelTest {
     @get:Rule
     val dispatcherRule = MainDispatcherRule()
 
+    private val repository = "github-react"
+    private val query = RepositoryQuery(repository, "jeffmcnd")
+
     private val client = ApolloClient.Builder()
         .networkTransport(QueueTestNetworkTransport())
         .build()
-    private val subject = MainViewModel(client)
-
-    private val query = RepositoryQuery("github-react", "jeffmcnd")
 
     @Test
-    fun `initialize - Fetches description`() = runTest(dispatcherRule.dispatcher) {
+    fun `state - Success emits Success`() = runTest(dispatcherRule.dispatcher) {
+        val subject = getSubject()
         val data = RepositoryQuery.Data(RepositoryQuery.Repository("description"))
         client.enqueueTestResponse(query, data, errors = null)
         subject.state.test {
-            Assert.assertEquals(MainUiState("Loading..."), awaitItem())
-            Assert.assertEquals(MainUiState("description"), awaitItem())
+            Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
+            subject.onSearchQueryChanged(repository)
+            Assert.assertEquals(MainUiState.Loading, awaitItem())
+            Assert.assertEquals(MainUiState.Success("description"), awaitItem())
         }
     }
 
     @Test
-    fun `initialize - Error sets text to first message`() = runTest(dispatcherRule.dispatcher) {
+    fun `state - Error emits LoadFailed`() = runTest(dispatcherRule.dispatcher) {
+        val subject = getSubject()
         val message = "No repository found."
         val errors = listOf(Error.Builder(message).build())
         client.enqueueTestResponse(operation = query, data = null, errors = errors)
         subject.state.test {
-            Assert.assertEquals(MainUiState("Loading..."), awaitItem())
-            Assert.assertEquals(MainUiState(message), awaitItem())
+            Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
+            subject.onSearchQueryChanged(repository)
+            Assert.assertEquals(MainUiState.Loading, awaitItem())
+            Assert.assertEquals(MainUiState.LoadFailed, awaitItem())
         }
     }
 
     @Test
-    fun `initialize - Null data and error sets text`() = runTest(dispatcherRule.dispatcher) {
+    fun `state - Null data and error emits LoadFailed`() = runTest(dispatcherRule.dispatcher) {
+        val subject = getSubject()
         client.enqueueTestResponse(query, null, null)
         subject.state.test {
-            Assert.assertEquals(MainUiState("Loading..."), awaitItem())
-            Assert.assertEquals(MainUiState("Unexpected error. Try again."), awaitItem())
+            Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
+            subject.onSearchQueryChanged(repository)
+            Assert.assertEquals(MainUiState.Loading, awaitItem())
+            Assert.assertEquals(MainUiState.LoadFailed, awaitItem())
         }
     }
 
     @Test
-    fun `initialize - Network error sets text`() = runTest(dispatcherRule.dispatcher) {
+    fun `state - Network error emits LoadFailed`() = runTest(dispatcherRule.dispatcher) {
+        val subject = getSubject()
         client.enqueueTestNetworkError()
         subject.state.test {
-            Assert.assertEquals(MainUiState("Loading..."), awaitItem())
-            Assert.assertEquals(MainUiState("Unexpected error. Try again."), awaitItem())
+            Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
+            subject.onSearchQueryChanged(repository)
+            Assert.assertEquals(MainUiState.Loading, awaitItem())
+            Assert.assertEquals(MainUiState.LoadFailed, awaitItem())
         }
     }
+
+    private fun getSubject(): MainViewModel = MainViewModel(SavedStateHandle(), client)
 }
