@@ -31,7 +31,6 @@ class MainViewModelTest {
         client.enqueueTestResponse(query, data, errors = null)
         subject.state.test {
             Assert.assertEquals(MainUiState("Loading..."), awaitItem())
-            subject.initialize()
             Assert.assertEquals(MainUiState("description"), awaitItem())
         }
     }
@@ -43,7 +42,6 @@ class MainViewModelTest {
         client.enqueueTestResponse(operation = query, data = null, errors = errors)
         subject.state.test {
             Assert.assertEquals(MainUiState("Loading..."), awaitItem())
-            subject.initialize()
             Assert.assertEquals(MainUiState(message), awaitItem())
         }
     }
@@ -53,7 +51,6 @@ class MainViewModelTest {
         client.enqueueTestResponse(query, null, null)
         subject.state.test {
             Assert.assertEquals(MainUiState("Loading..."), awaitItem())
-            subject.initialize()
             Assert.assertEquals(MainUiState("Unexpected error. Try again."), awaitItem())
         }
     }
@@ -63,7 +60,6 @@ class MainViewModelTest {
         client.enqueueTestNetworkError()
         subject.state.test {
             Assert.assertEquals(MainUiState("Loading..."), awaitItem())
-            subject.initialize()
             Assert.assertEquals(MainUiState("Unexpected error. Try again."), awaitItem())
         }
     }

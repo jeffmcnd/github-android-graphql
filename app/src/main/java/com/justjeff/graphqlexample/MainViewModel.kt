@@ -3,44 +3,57 @@ package com.justjeff.graphqlexample
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.ApolloRequest
+import com.justjeff.graphqlexample.core.Result
+import com.justjeff.graphqlexample.core.asResult
 import com.justjeff.graphqlexample.models.RepositoryQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val client: ApolloClient) : ViewModel() {
-    private val _state = MutableStateFlow(MainUiState("Loading..."))
-    val state: StateFlow<MainUiState>
-        get() = _state.asStateFlow()
+    val state: StateFlow<MainUiState> = mainUiState()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = MainUiState("Loading..."),
+        )
 
-    private val isInitialized = AtomicBoolean(false)
+    private fun mainUiState(): Flow<MainUiState> =
+        repositoryDescription("github-react", "jeffmcnd")
+            .asResult()
+            .map { result ->
+                when (result) {
+                    is Result.Loading -> MainUiState("Loading...")
 
-    fun initialize() {
-        if (isInitialized.get()) {
-            return
-        }
-        isInitialized.set(true)
-        fetchRepositoryDesc()
-    }
+                    is Result.Success ->
+                        MainUiState(result.data?.description ?: "No description specified.")
 
-    private fun fetchRepositoryDesc() {
-        viewModelScope.launch {
-            val query = RepositoryQuery("github-react", "jeffmcnd")
-            val response = client.query(query).execute()
+                    is Result.Error -> MainUiState("Unexpected error. Try again.")
+                }
+            }
+
+    private fun repositoryDescription(
+        name: String,
+        owner: String,
+    ): Flow<RepositoryQuery.Repository?> {
+        val query = RepositoryQuery(name, owner)
+        val request = ApolloRequest.Builder(query).build()
+        return client.executeAsFlow(request).map { response ->
             val data = response.data
             val error = response.errors?.firstOrNull()
-            val text = when {
-                data != null -> data.repository?.description ?: "No description specified."
-                error != null -> error.message
-                else -> "Unexpected error. Try again."
+            val exception = response.exception
+            when {
+                data != null -> data.repository
+                error != null -> throw Exception(error.message)
+                exception != null -> throw exception
+                else -> throw Exception("Unexpected state.")
             }
-            _state.update { it.copy(text = text) }
         }
     }
 }
