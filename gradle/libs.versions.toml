@@ -13,6 +13,7 @@ kotlinxTest = "1.9.0"
 turbine = "1.2.0"
 ksp = "2.0.21-1.0.25"
 hilt = "2.51.1"
+store5 = "5.0.0-beta02"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,6 +36,7 @@ apollo-test = { group = "com.apollographql.apollo", name="apollo-testing-support
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+store5 = { group = "org.mobilenativefoundation.store", name = "store5", version.ref = "store5" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
