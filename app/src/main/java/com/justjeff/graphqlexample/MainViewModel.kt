@@ -9,6 +9,7 @@ import com.justjeff.graphqlexample.core.Result
 import com.justjeff.graphqlexample.core.asResult
 import com.justjeff.graphqlexample.models.RepositoryQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,8 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val client: ApolloClient,
-) : ViewModel() {
+    scope: CoroutineScope,
+) : ViewModel(scope) {
     val searchQuery =
         savedStateHandle.getStateFlow(key = SEARCH_QUERY, initialValue = "")
 

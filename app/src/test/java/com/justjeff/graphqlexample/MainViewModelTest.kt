@@ -9,16 +9,13 @@ import com.apollographql.apollo.testing.QueueTestNetworkTransport
 import com.apollographql.apollo.testing.enqueueTestNetworkError
 import com.apollographql.apollo.testing.enqueueTestResponse
 import com.justjeff.graphqlexample.models.RepositoryQuery
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
-import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ApolloExperimental::class)
 class MainViewModelTest {
-    @get:Rule
-    val dispatcherRule = MainDispatcherRule()
-
     private val repository = "github-react"
     private val query = RepositoryQuery(repository, "jeffmcnd")
 
@@ -27,8 +24,8 @@ class MainViewModelTest {
         .build()
 
     @Test
-    fun `state - Success emits Success`() = runTest(dispatcherRule.dispatcher) {
-        val subject = getSubject()
+    fun `state - Success emits Success`() = runTest {
+        val subject = getSubject(backgroundScope)
         val data = RepositoryQuery.Data(RepositoryQuery.Repository("description"))
         client.enqueueTestResponse(query, data, errors = null)
         subject.state.test {
@@ -40,8 +37,8 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `state - Error emits LoadFailed`() = runTest(dispatcherRule.dispatcher) {
-        val subject = getSubject()
+    fun `state - Error emits LoadFailed`() = runTest {
+        val subject = getSubject(backgroundScope)
         val message = "No repository found."
         val errors = listOf(Error.Builder(message).build())
         client.enqueueTestResponse(operation = query, data = null, errors = errors)
@@ -54,8 +51,8 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `state - Null data and error emits LoadFailed`() = runTest(dispatcherRule.dispatcher) {
-        val subject = getSubject()
+    fun `state - Null data and error emits LoadFailed`() = runTest {
+        val subject = getSubject(backgroundScope)
         client.enqueueTestResponse(query, null, null)
         subject.state.test {
             Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
@@ -66,8 +63,8 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `state - Network error emits LoadFailed`() = runTest(dispatcherRule.dispatcher) {
-        val subject = getSubject()
+    fun `state - Network error emits LoadFailed`() = runTest {
+        val subject = getSubject(backgroundScope)
         client.enqueueTestNetworkError()
         subject.state.test {
             Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
@@ -77,5 +74,6 @@ class MainViewModelTest {
         }
     }
 
-    private fun getSubject(): MainViewModel = MainViewModel(SavedStateHandle(), client)
+    private fun getSubject(scope: CoroutineScope): MainViewModel =
+        MainViewModel(SavedStateHandle(), client, scope)
 }
