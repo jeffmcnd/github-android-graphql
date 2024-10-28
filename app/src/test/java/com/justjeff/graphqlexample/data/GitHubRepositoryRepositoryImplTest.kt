@@ -2,6 +2,7 @@ package com.justjeff.graphqlexample.data
 
 import app.cash.turbine.test
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.api.Error
 import com.apollographql.apollo.testing.QueueTestNetworkTransport
 import com.apollographql.apollo.testing.enqueueTestNetworkError
@@ -11,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
 
+@OptIn(ApolloExperimental::class)
 class GitHubRepositoryRepositoryImplTest {
     private val client = ApolloClient.Builder()
         .networkTransport(QueueTestNetworkTransport())
