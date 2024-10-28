@@ -1,4 +1,4 @@
-package com.justjeff.graphqlexample
+package com.justjeff.graphqlexample.core
 
 import dagger.Module
 import dagger.Provides
