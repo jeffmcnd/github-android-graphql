@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.justjeff.graphqlexample.core.Result
 import com.justjeff.graphqlexample.core.asResult
+import com.justjeff.graphqlexample.data.GitHubRepository
 import com.justjeff.graphqlexample.data.GitHubRepositoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -47,25 +48,23 @@ class MainViewModel @Inject constructor(
                 } else {
                     repo.getRepository(query, "jeffmcnd")
                         .asResult()
-                        .map { result ->
-                            when (result) {
-                                is Result.Loading -> MainUiState.Loading
-
-                                is Result.Success -> {
-                                    val repository = result.data
-                                    val desc = if (repository != null) {
-                                        repository.description ?: "No description specified."
-                                    } else {
-                                        ""
-                                    }
-                                    MainUiState.Success(desc)
-                                }
-
-                                is Result.Error -> MainUiState.LoadFailed
-                            }
-                        }
+                        .map(::toMainUiState)
                 }
             }
+
+    private fun toMainUiState(result: Result<GitHubRepository?>): MainUiState =
+        when (result) {
+            is Result.Loading -> MainUiState.Loading
+            is Result.Success -> MainUiState.Success(getSuccessText(result.data))
+            is Result.Error -> MainUiState.LoadFailed
+        }
+
+    private fun getSuccessText(repository: GitHubRepository?): String =
+        if (repository != null) {
+            repository.description ?: "No description specified."
+        } else {
+            ""
+        }
 }
 
 private const val SEARCH_QUERY = "searchQuery"
