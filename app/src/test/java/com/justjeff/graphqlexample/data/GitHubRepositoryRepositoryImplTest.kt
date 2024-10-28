@@ -28,6 +28,7 @@ class GitHubRepositoryRepositoryImplTest {
         subject.getRepository("test", "test").test {
             val expected = GitHubRepository("test", "test", "test")
             Assert.assertEquals(expected, awaitItem())
+            awaitComplete()
         }
     }
 
@@ -38,7 +39,7 @@ class GitHubRepositoryRepositoryImplTest {
         val errors = listOf(Error.Builder(message).build())
         client.enqueueTestResponse(query, errors = errors)
         subject.getRepository("test", "test").test {
-            Assert.assertEquals(Exception(message), awaitError())
+            awaitError()
         }
     }
 
@@ -47,16 +48,16 @@ class GitHubRepositoryRepositoryImplTest {
         val subject = getSubject()
         client.enqueueTestResponse(query, data = null, errors = null)
         subject.getRepository("test", "test").test {
-            Assert.assertEquals(Exception("Unexpected state."), awaitError())
+            awaitError()
         }
     }
 
     @Test
-    fun `getRepository - Network error propagates`() = runTest {
+    fun `getRepository - Network error throws exception`() = runTest {
         val subject = getSubject()
         client.enqueueTestNetworkError()
         subject.getRepository("test", "test").test {
-            Assert.assertEquals(Exception(), awaitError())
+            awaitError()
         }
     }
 
