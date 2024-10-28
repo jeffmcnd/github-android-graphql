@@ -1,4 +1,4 @@
-package com.justjeff.graphqlexample
+package com.justjeff.graphqlexample.network
 
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.network.okHttpClient

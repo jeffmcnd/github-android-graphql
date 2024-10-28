@@ -1,4 +1,4 @@
-package com.justjeff.graphqlexample
+package com.justjeff.graphqlexample.network
 
 import okhttp3.Interceptor
 import okhttp3.Response

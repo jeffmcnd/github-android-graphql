@@ -2,78 +2,60 @@ package com.justjeff.graphqlexample
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
-import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.annotations.ApolloExperimental
-import com.apollographql.apollo.api.Error
-import com.apollographql.apollo.testing.QueueTestNetworkTransport
-import com.apollographql.apollo.testing.enqueueTestNetworkError
-import com.apollographql.apollo.testing.enqueueTestResponse
+import com.justjeff.graphqlexample.data.GitHubRepository
+import com.justjeff.graphqlexample.data.GitHubRepositoryRepository
 import com.justjeff.graphqlexample.models.RepositoryQuery
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
 
-@OptIn(ApolloExperimental::class)
 class MainViewModelTest {
-    private val repository = "github-react"
-    private val query = RepositoryQuery(repository, "jeffmcnd")
+    private val searchQuery = "github-react"
+    private val repo = object : GitHubRepositoryRepository {
+        var flow: Flow<GitHubRepository?> = flowOf(null)
+        override fun getRepository(name: String, owner: String): Flow<GitHubRepository?> = flow
+    }
 
-    private val client = ApolloClient.Builder()
-        .networkTransport(QueueTestNetworkTransport())
-        .build()
+    @Test
+    fun `state - Null emits empty Success`() = runTest {
+        val subject = getSubject(backgroundScope)
+        subject.state.test {
+            Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
+            subject.onSearchQueryChanged(searchQuery)
+            Assert.assertEquals(MainUiState.Loading, awaitItem())
+            Assert.assertEquals(MainUiState.Success(""), awaitItem())
+        }
+    }
 
     @Test
     fun `state - Success emits Success`() = runTest {
         val subject = getSubject(backgroundScope)
-        val data = RepositoryQuery.Data(RepositoryQuery.Repository("description"))
-        client.enqueueTestResponse(query, data, errors = null)
+        repo.flow = flowOf(GitHubRepository("test", "test", "test"))
         subject.state.test {
             Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
-            subject.onSearchQueryChanged(repository)
+            subject.onSearchQueryChanged(searchQuery)
             Assert.assertEquals(MainUiState.Loading, awaitItem())
-            Assert.assertEquals(MainUiState.Success("description"), awaitItem())
+            Assert.assertEquals(MainUiState.Success("test"), awaitItem())
         }
     }
 
     @Test
-    fun `state - Error emits LoadFailed`() = runTest {
+    fun `state - Exception emits LoadFailed`() = runTest {
         val subject = getSubject(backgroundScope)
-        val message = "No repository found."
-        val errors = listOf(Error.Builder(message).build())
-        client.enqueueTestResponse(operation = query, data = null, errors = errors)
+        repo.flow = flow { throw Exception() }
         subject.state.test {
             Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
-            subject.onSearchQueryChanged(repository)
-            Assert.assertEquals(MainUiState.Loading, awaitItem())
-            Assert.assertEquals(MainUiState.LoadFailed, awaitItem())
-        }
-    }
-
-    @Test
-    fun `state - Null data and error emits LoadFailed`() = runTest {
-        val subject = getSubject(backgroundScope)
-        client.enqueueTestResponse(query, null, null)
-        subject.state.test {
-            Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
-            subject.onSearchQueryChanged(repository)
-            Assert.assertEquals(MainUiState.Loading, awaitItem())
-            Assert.assertEquals(MainUiState.LoadFailed, awaitItem())
-        }
-    }
-
-    @Test
-    fun `state - Network error emits LoadFailed`() = runTest {
-        val subject = getSubject(backgroundScope)
-        client.enqueueTestNetworkError()
-        subject.state.test {
-            Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
-            subject.onSearchQueryChanged(repository)
+            subject.onSearchQueryChanged(searchQuery)
             Assert.assertEquals(MainUiState.Loading, awaitItem())
             Assert.assertEquals(MainUiState.LoadFailed, awaitItem())
         }
     }
 
     private fun getSubject(scope: CoroutineScope): MainViewModel =
-        MainViewModel(SavedStateHandle(), client, scope)
+        MainViewModel(SavedStateHandle(), repo, scope)
 }

@@ -1,5 +1,9 @@
 query RepositoryQuery($name: String!, $owner: String!) {
     repository(name: $name, owner: $owner) {
+        name,
+        owner {
+            login
+        },
         description
     }
 }
