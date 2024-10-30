@@ -3,16 +3,19 @@ package com.justjeff.graphqlexample
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.justjeff.graphqlexample.core.Result
-import com.justjeff.graphqlexample.core.asResult
-import com.justjeff.graphqlexample.data.GitHubRepository
+import com.justjeff.graphqlexample.core.Output
+import com.justjeff.graphqlexample.data.GitHubRepositoryParams
 import com.justjeff.graphqlexample.data.GitHubRepositoryRepository
+import com.justjeff.graphqlexample.data.GitHubRepositoryResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -39,6 +42,7 @@ class MainViewModel @Inject constructor(
         savedStateHandle[SEARCH_QUERY] = query
     }
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private fun mainUiState(): Flow<MainUiState> =
         searchQuery
             .debounce(500)
@@ -46,25 +50,28 @@ class MainViewModel @Inject constructor(
                 if (query.length < SEARCH_QUERY_MIN_LENGTH) {
                     flowOf(MainUiState.EmptyQuery)
                 } else {
-                    repo.getRepository(query, "jeffmcnd")
-                        .asResult()
+                    repo.getRepository(GitHubRepositoryParams(query, "jeffmcnd"))
                         .map(::toMainUiState)
+                        .filterNotNull()
                 }
             }
 
-    private fun toMainUiState(result: Result<GitHubRepository?>): MainUiState =
+    private fun toMainUiState(result: Output<GitHubRepositoryResult>): MainUiState? =
         when (result) {
-            is Result.Loading -> MainUiState.Loading
-            is Result.Success -> MainUiState.Success(getSuccessText(result.data))
-            is Result.Error -> MainUiState.LoadFailed
+            is Output.Loading -> MainUiState.Loading
+            is Output.Success -> MainUiState.Success(getSuccessText(result.data))
+            is Output.Error -> MainUiState.LoadFailed
+            is Output.NothingNew -> null
         }
 
-    private fun getSuccessText(repository: GitHubRepository?): String =
-        if (repository != null) {
-            repository.description ?: "No description specified."
+    private fun getSuccessText(result: GitHubRepositoryResult?): String {
+        val repo = result?.repository
+        return if (repo != null) {
+            repo.description ?: "No description specified."
         } else {
             ""
         }
+    }
 }
 
 private const val SEARCH_QUERY = "searchQuery"

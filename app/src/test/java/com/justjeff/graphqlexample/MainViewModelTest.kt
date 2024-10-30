@@ -2,28 +2,31 @@ package com.justjeff.graphqlexample
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
-import com.apollographql.apollo.annotations.ApolloExperimental
+import com.justjeff.graphqlexample.core.Output
+import com.justjeff.graphqlexample.core.OutputOrigin
 import com.justjeff.graphqlexample.data.GitHubRepository
+import com.justjeff.graphqlexample.data.GitHubRepositoryParams
 import com.justjeff.graphqlexample.data.GitHubRepositoryRepository
-import com.justjeff.graphqlexample.models.RepositoryQuery
+import com.justjeff.graphqlexample.data.GitHubRepositoryResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
 
 class MainViewModelTest {
     private val searchQuery = "github-react"
-    private val repo = object : GitHubRepositoryRepository {
-        var flow: Flow<GitHubRepository?> = flowOf(null)
-        override fun getRepository(name: String, owner: String): Flow<GitHubRepository?> = flow
-    }
 
     @Test
     fun `state - Null emits empty Success`() = runTest {
-        val subject = getSubject(backgroundScope)
+        val result = GitHubRepositoryResult(null)
+        val repo = gitHubRepositoryRepository {
+            emit(Output.Loading(OutputOrigin.Fetcher()))
+            emit(Output.Success(result, OutputOrigin.Fetcher()))
+        }
+        val subject = getSubject(backgroundScope, repo)
         subject.state.test {
             Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
             subject.onSearchQueryChanged(searchQuery)
@@ -34,8 +37,13 @@ class MainViewModelTest {
 
     @Test
     fun `state - Success emits Success`() = runTest {
-        val subject = getSubject(backgroundScope)
-        repo.flow = flowOf(GitHubRepository("test", "test", "test"))
+        val repository = GitHubRepository("test", "test", "test")
+        val result = GitHubRepositoryResult(repository)
+        val repo = gitHubRepositoryRepository {
+            emit(Output.Loading(OutputOrigin.Fetcher()))
+            emit(Output.Success(result, OutputOrigin.Fetcher()))
+        }
+        val subject = getSubject(backgroundScope, repo)
         subject.state.test {
             Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
             subject.onSearchQueryChanged(searchQuery)
@@ -46,8 +54,11 @@ class MainViewModelTest {
 
     @Test
     fun `state - Exception emits LoadFailed`() = runTest {
-        val subject = getSubject(backgroundScope)
-        repo.flow = flow { throw Exception() }
+        val repo = gitHubRepositoryRepository {
+            emit(Output.Loading(OutputOrigin.Fetcher()))
+            emit(Output.Error.Exception(Exception(), OutputOrigin.Fetcher()))
+        }
+        val subject = getSubject(backgroundScope, repo)
         subject.state.test {
             Assert.assertEquals(MainUiState.EmptyQuery, awaitItem())
             subject.onSearchQueryChanged(searchQuery)
@@ -56,6 +67,14 @@ class MainViewModelTest {
         }
     }
 
-    private fun getSubject(scope: CoroutineScope): MainViewModel =
-        MainViewModel(SavedStateHandle(), repo, scope)
+    private fun gitHubRepositoryRepository(block: suspend FlowCollector<Output<GitHubRepositoryResult>>.() -> Unit) =
+        object : GitHubRepositoryRepository {
+            override fun getRepository(params: GitHubRepositoryParams): Flow<Output<GitHubRepositoryResult>> =
+                flow(block)
+        }
+
+    private fun getSubject(
+        scope: CoroutineScope,
+        repo: GitHubRepositoryRepository,
+    ): MainViewModel = MainViewModel(SavedStateHandle(), repo, scope)
 }

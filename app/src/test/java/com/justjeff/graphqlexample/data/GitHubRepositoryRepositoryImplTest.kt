@@ -7,6 +7,8 @@ import com.apollographql.apollo.api.Error
 import com.apollographql.apollo.testing.QueueTestNetworkTransport
 import com.apollographql.apollo.testing.enqueueTestNetworkError
 import com.apollographql.apollo.testing.enqueueTestResponse
+import com.justjeff.graphqlexample.core.Output
+import com.justjeff.graphqlexample.core.OutputOrigin
 import com.justjeff.graphqlexample.models.RepositoryQuery
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
@@ -19,6 +21,7 @@ class GitHubRepositoryRepositoryImplTest {
         .build()
     private val mapper = GitHubRepositoryMapper()
     private val query = RepositoryQuery("test", "test")
+    private val params = GitHubRepositoryParams("test", "test")
 
     @Test
     fun `getRepository - Success returns repository`() = runTest {
@@ -27,10 +30,13 @@ class GitHubRepositoryRepositoryImplTest {
         val repository = RepositoryQuery.Repository("test", owner, "test")
         val data = RepositoryQuery.Data(repository)
         client.enqueueTestResponse(query, data)
-        subject.getRepository("test", "test").test {
-            val expected = GitHubRepository("test", "test", "test")
+        subject.getRepository(params).test {
+            Assert.assertEquals(Output.Loading(OutputOrigin.Fetcher()), awaitItem())
+            val repo = GitHubRepository("test", "test", "test")
+            val result = GitHubRepositoryResult(repo)
+            val expected = Output.Success(result, OutputOrigin.Fetcher())
             Assert.assertEquals(expected, awaitItem())
-            awaitComplete()
+            expectNoEvents()
         }
     }
 
@@ -40,8 +46,11 @@ class GitHubRepositoryRepositoryImplTest {
         val message = "No repository found."
         val errors = listOf(Error.Builder(message).build())
         client.enqueueTestResponse(query, errors = errors)
-        subject.getRepository("test", "test").test {
-            awaitError()
+        subject.getRepository(params).test {
+            Assert.assertEquals(Output.Loading(OutputOrigin.Fetcher()), awaitItem())
+            val exception = awaitItem() as Output.Error.Exception
+            Assert.assertTrue(exception.error is Exception)
+            expectNoEvents()
         }
     }
 
@@ -49,8 +58,11 @@ class GitHubRepositoryRepositoryImplTest {
     fun `getRepository - Null data and errors throws exception`() = runTest {
         val subject = getSubject()
         client.enqueueTestResponse(query, data = null, errors = null)
-        subject.getRepository("test", "test").test {
-            awaitError()
+        subject.getRepository(params).test {
+            Assert.assertEquals(Output.Loading(OutputOrigin.Fetcher()), awaitItem())
+            val exception = awaitItem() as Output.Error.Exception
+            Assert.assertTrue(exception.error is Exception)
+            expectNoEvents()
         }
     }
 
@@ -58,8 +70,11 @@ class GitHubRepositoryRepositoryImplTest {
     fun `getRepository - Network error throws exception`() = runTest {
         val subject = getSubject()
         client.enqueueTestNetworkError()
-        subject.getRepository("test", "test").test {
-            awaitError()
+        subject.getRepository(params).test {
+            Assert.assertEquals(Output.Loading(OutputOrigin.Fetcher()), awaitItem())
+            val exception = awaitItem() as Output.Error.Exception
+            Assert.assertTrue(exception.error is Exception)
+            expectNoEvents()
         }
     }
 
