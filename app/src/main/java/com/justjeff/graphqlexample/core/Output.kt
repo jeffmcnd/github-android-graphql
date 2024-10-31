@@ -1,5 +1,8 @@
 package com.justjeff.graphqlexample.core
 
+import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.ApolloResponse
+import com.apollographql.apollo.api.Operation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.mobilenativefoundation.store.store5.StoreReadResponse

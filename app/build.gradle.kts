@@ -55,15 +55,20 @@ dependencies {
     implementation(libs.apollo)
     implementation(libs.hilt.android)
     implementation(libs.store5)
+
     ksp(libs.hilt.android.compiler)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.apollo.test)
     testImplementation(libs.turbine)
+    testImplementation(libs.mockk)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
