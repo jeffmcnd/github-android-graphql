@@ -4,9 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.justjeff.graphqlexample.core.Output
+import com.justjeff.graphqlexample.data.model.GitHubRepository
 import com.justjeff.graphqlexample.data.model.GitHubRepositoryParams
 import com.justjeff.graphqlexample.data.repo.GitHubRepositoryRepository
-import com.justjeff.graphqlexample.data.model.GitHubRepositoryResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,22 +56,16 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-    private fun toMainUiState(result: Output<GitHubRepositoryResult>): MainUiState? =
-        when (result) {
+    private fun toMainUiState(output: Output<GitHubRepository>): MainUiState? =
+        when (output) {
             is Output.Loading -> MainUiState.Loading
-            is Output.Success -> MainUiState.Success(getSuccessText(result.data))
+            is Output.Success -> MainUiState.Success(getSuccessText(output.data))
             is Output.Error -> MainUiState.LoadFailed
             is Output.NothingNew -> null
         }
 
-    private fun getSuccessText(result: GitHubRepositoryResult?): String {
-        val repo = result?.repository
-        return if (repo != null) {
-            repo.description ?: "No description specified."
-        } else {
-            ""
-        }
-    }
+    private fun getSuccessText(repo: GitHubRepository): String =
+        repo.description ?: "No description specified."
 }
 
 private const val SEARCH_QUERY = "searchQuery"
