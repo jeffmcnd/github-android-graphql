@@ -4,10 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.justjeff.graphqlexample.core.Output
 import com.justjeff.graphqlexample.core.OutputOrigin
-import com.justjeff.graphqlexample.data.GitHubRepository
-import com.justjeff.graphqlexample.data.GitHubRepositoryParams
-import com.justjeff.graphqlexample.data.GitHubRepositoryRepository
-import com.justjeff.graphqlexample.data.GitHubRepositoryResult
+import com.justjeff.graphqlexample.data.model.GitHubRepository
+import com.justjeff.graphqlexample.data.model.GitHubRepositoryParams
+import com.justjeff.graphqlexample.data.repo.GitHubRepositoryRepository
+import com.justjeff.graphqlexample.data.model.GitHubRepositoryResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector

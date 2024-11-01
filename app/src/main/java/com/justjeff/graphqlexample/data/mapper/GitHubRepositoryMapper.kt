@@ -1,5 +1,7 @@
-package com.justjeff.graphqlexample.data
+package com.justjeff.graphqlexample.data.mapper
 
+import com.justjeff.graphqlexample.data.model.GitHubRepository
+import com.justjeff.graphqlexample.data.model.GitHubRepositoryResult
 import com.justjeff.graphqlexample.models.RepositoryQuery
 import javax.inject.Inject
 

@@ -1,6 +1,9 @@
-package com.justjeff.graphqlexample.data
+package com.justjeff.graphqlexample.data.store
 
 import com.apollographql.apollo.ApolloClient
+import com.justjeff.graphqlexample.data.mapper.GitHubRepositoryMapper
+import com.justjeff.graphqlexample.data.model.GitHubRepositoryParams
+import com.justjeff.graphqlexample.data.model.GitHubRepositoryResult
 import com.justjeff.graphqlexample.models.RepositoryQuery
 import com.justjeff.graphqlexample.network.map
 import org.mobilenativefoundation.store.store5.Fetcher

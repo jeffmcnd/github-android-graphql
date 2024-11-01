@@ -1,5 +1,9 @@
 package com.justjeff.graphqlexample.data
 
+import com.justjeff.graphqlexample.data.repo.GitHubRepositoryRepository
+import com.justjeff.graphqlexample.data.repo.GitHubRepositoryRepositoryImpl
+import com.justjeff.graphqlexample.data.store.GitHubRepositoryStore
+import com.justjeff.graphqlexample.data.store.GitHubRepositoryStoreFactory
 import dagger.Binds
 import dagger.Module
 import dagger.Provides

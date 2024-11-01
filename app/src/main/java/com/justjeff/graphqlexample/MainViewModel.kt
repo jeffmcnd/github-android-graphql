@@ -4,9 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.justjeff.graphqlexample.core.Output
-import com.justjeff.graphqlexample.data.GitHubRepositoryParams
-import com.justjeff.graphqlexample.data.GitHubRepositoryRepository
-import com.justjeff.graphqlexample.data.GitHubRepositoryResult
+import com.justjeff.graphqlexample.data.model.GitHubRepositoryParams
+import com.justjeff.graphqlexample.data.repo.GitHubRepositoryRepository
+import com.justjeff.graphqlexample.data.model.GitHubRepositoryResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -1,5 +1,8 @@
 package com.justjeff.graphqlexample.data
 
+import com.justjeff.graphqlexample.data.model.GitHubRepositoryParams
+import com.justjeff.graphqlexample.data.repo.GitHubRepositoryRepository
+import com.justjeff.graphqlexample.data.repo.GitHubRepositoryRepositoryImpl
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
