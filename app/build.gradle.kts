@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.apollo)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -80,5 +81,24 @@ dependencies {
 apollo {
     service("service") {
         packageName.set("com.justjeff.graphqlexample.models")
+    }
+}
+
+kover.reports {
+    filters {
+        includes {
+            classes("com.justjeff.graphqlexample.*")
+        }
+        excludes {
+            classes("*_*") // Files with underscores that Dagger generates
+            classes("*Activity")
+            classes("com.justjeff.graphqlexample.ui.*")
+            classes("com.justjeff.graphqlexample.data.db.*")
+            classes("com.justjeff.graphqlexample.data.store.*")
+            classes("com.justjeff.graphqlexample.models.*") // GraphQL generated models
+        }
+    }
+    verify.rule {
+        minBound(30)
     }
 }
