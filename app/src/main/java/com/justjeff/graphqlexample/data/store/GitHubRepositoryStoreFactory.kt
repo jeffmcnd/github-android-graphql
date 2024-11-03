@@ -30,7 +30,7 @@ internal class GitHubRepositoryStoreFactory @Inject constructor(
         ).build()
 
     private fun createFetcher(): Fetcher<GitHubRepositoryParams, GitHubRepository> {
-        return Fetcher.of { params ->
+        return Fetcher.of("GraphQL") { params ->
             val request = RepositoryQuery(params.name, params.owner)
             client.query(request).execute().map(mapper::map)!!
         }
